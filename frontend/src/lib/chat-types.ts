@@ -1,4 +1,4 @@
-import type { LucideIcon } from "lucide-react";
+﻿import type { LucideIcon } from "lucide-react";
 
 export type ConversationStatus = "active" | "draft" | "completed";
 
@@ -9,10 +9,13 @@ export type Recommendation = {
   name: string;
   url: string;
   testType: string;
+  description?: string;
   duration?: string;
   confidence?: number;
   rationale?: string;
   skills?: string[];
+  adaptive?: boolean;
+  remoteTesting?: boolean;
 };
 
 export type ChatMessage = {

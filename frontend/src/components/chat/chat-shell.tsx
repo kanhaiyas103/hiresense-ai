@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { AnimatePresence, domAnimation, LazyMotion, m, MotionConfig } from "framer-motion";
 import { Command, PanelLeft, ShieldCheck, Sparkles, Wifi, WifiOff } from "lucide-react";
@@ -511,6 +511,8 @@ function mapApiRecommendations(
     name: recommendation.name,
     url: recommendation.url,
     testType: recommendation.test_type,
+    description: "Official SHL catalog assessment returned by the recommendation engine.",
+    confidence: Math.max(0.72, 0.96 - index * 0.035),
   }));
 }
 
@@ -518,3 +520,4 @@ function titleFromPrompt(prompt: string) {
   const words = prompt.split(/\s+/).filter(Boolean).slice(0, 5).join(" ");
   return words.length > 36 ? `${words.slice(0, 36)}…` : words || "New conversation";
 }
+

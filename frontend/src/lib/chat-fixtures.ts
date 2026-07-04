@@ -1,4 +1,4 @@
-import {
+﻿import {
   BadgeCheck,
   BriefcaseBusiness,
   Code2,
@@ -16,34 +16,46 @@ const sampleRecommendations: Recommendation[] = [
     id: "java-new",
     name: "Java New",
     url: "https://www.shl.com/products/product-catalog/view/java-new/",
-    testType: "Knowledge & Skills",
+    testType: "K",
+    description:
+      "Measures practical Java knowledge for backend engineering roles where language fluency and applied software judgment matter.",
     duration: "30 min",
-    confidence: 0.92,
+    confidence: 0.96,
     rationale:
       "Strong fit for backend Java hiring where language fluency and practical software knowledge matter.",
     skills: ["Java", "Backend", "Programming"],
+    adaptive: false,
+    remoteTesting: true,
   },
   {
     id: "verify-interactive-java",
     name: "Verify Interactive - Java",
     url: "https://www.shl.com/products/product-catalog/view/verify-interactive-java/",
-    testType: "Simulation",
+    testType: "K",
+    description:
+      "Adds a more hands-on coding signal when the team wants evidence closer to day-to-day engineering work.",
     duration: "36 min",
-    confidence: 0.88,
+    confidence: 0.92,
     rationale:
       "Useful when the hiring team wants a more work-sample oriented signal for real coding ability.",
     skills: ["Java", "Problem solving", "Live coding"],
+    adaptive: false,
+    remoteTesting: true,
   },
   {
     id: "computer-science",
     name: "Computer Science",
     url: "https://www.shl.com/products/product-catalog/view/computer-science/",
-    testType: "Knowledge & Skills",
+    testType: "K",
+    description:
+      "Broad technical fundamentals coverage for algorithms, computing concepts, and general engineering reasoning.",
     duration: "25 min",
-    confidence: 0.81,
+    confidence: 0.88,
     rationale:
       "Adds breadth across algorithms, fundamentals, and general engineering reasoning.",
     skills: ["Algorithms", "CS fundamentals", "Reasoning"],
+    adaptive: false,
+    remoteTesting: true,
   },
 ];
 

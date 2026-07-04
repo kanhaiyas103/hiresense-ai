@@ -1,4 +1,4 @@
-import { Bot, UserRound } from "lucide-react";
+﻿import { Bot, UserRound } from "lucide-react";
 import { m } from "framer-motion";
 import type { ReactNode } from "react";
 
@@ -16,9 +16,10 @@ export function MessageBubble({ message }: MessageBubbleProps) {
 
   return (
     <m.article
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.28, ease: "easeOut" }}
+      layout
+      initial={{ opacity: 0, y: 16, filter: "blur(6px)" }}
+      animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+      transition={{ duration: 0.34, ease: "easeOut" }}
       className={cn("flex gap-3", isUser && "justify-end")}
     >
       {!isUser ? (
@@ -26,26 +27,36 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           <Bot className="h-4 w-4" aria-hidden="true" />
         </Avatar>
       ) : null}
-      <div className={cn("max-w-[min(760px,92%)]", isUser && "order-first")}>
+      <div className={cn("max-w-[min(880px,94%)]", isUser && "order-first")}> 
         <div
           className={cn(
-            "rounded-[1.35rem] border px-4 py-3 shadow-soft-xl",
+            "rounded-[1.35rem] border px-4 py-3 shadow-soft-xl sm:px-5 sm:py-4",
             isUser
               ? "border-indigo-300/20 bg-indigo-400/15 text-foreground"
-              : "border-white/10 bg-white/[0.05]",
+              : "border-white/10 bg-white/[0.045]",
           )}
         >
           <MarkdownContent content={message.content} />
         </div>
         {message.recommendations?.length ? (
-          <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {message.recommendations.map((recommendation) => (
+          <m.div
+            layout
+            className="mt-4 grid gap-4 lg:grid-cols-2"
+            initial="hidden"
+            animate="show"
+            variants={{
+              hidden: {},
+              show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
+            }}
+          >
+            {message.recommendations.map((recommendation, index) => (
               <RecommendationCard
                 key={recommendation.id}
                 recommendation={recommendation}
+                index={index}
               />
             ))}
-          </div>
+          </m.div>
         ) : null}
       </div>
       {isUser ? (
