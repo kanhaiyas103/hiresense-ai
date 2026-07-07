@@ -1,0 +1,8 @@
+﻿<svg width="1200" height="720" viewBox="0 0 1200 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="720" fill="#09090B"/>
+  <rect x="120" y="92" width="960" height="536" rx="48" fill="white" fill-opacity="0.055" stroke="white" stroke-opacity="0.12"/>
+  <circle cx="600" cy="360" r="88" fill="#818CF8" fill-opacity="0.22"/>
+  <path d="M566 318L646 360L566 402V318Z" fill="white"/>
+  <text x="600" y="520" text-anchor="middle" fill="white" font-family="Inter, Arial" font-size="38" font-weight="700">HireSense AI Demo Placeholder</text>
+  <text x="600" y="566" text-anchor="middle" fill="#A1A1AA" font-family="Inter, Arial" font-size="22">Add product walkthrough GIF or video here</text>
+</svg>

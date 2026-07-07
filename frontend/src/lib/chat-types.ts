@@ -1,6 +1,6 @@
 ﻿import type { LucideIcon } from "lucide-react";
 
-export type ConversationStatus = "active" | "draft" | "completed";
+export type ConversationStatus = "active" | "draft" | "completed" | "archived";
 
 export type ChatRole = "assistant" | "user";
 
@@ -33,6 +33,7 @@ export type Conversation = {
   status: ConversationStatus;
   updatedAt: string;
   messages: ChatMessage[];
+  pinned?: boolean;
 };
 
 export type Suggestion = {

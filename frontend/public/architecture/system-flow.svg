@@ -1,0 +1,9 @@
+﻿<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="800" fill="#09090B"/>
+  <path d="M600 90V710" stroke="url(#g)" stroke-width="3" stroke-dasharray="10 14"/>
+  <g fill="white" fill-opacity="0.07" stroke="white" stroke-opacity="0.12">
+    <rect x="390" y="80" width="420" height="72" rx="24"/><rect x="390" y="190" width="420" height="72" rx="24"/><rect x="390" y="300" width="420" height="72" rx="24"/><rect x="390" y="410" width="420" height="72" rx="24"/><rect x="390" y="520" width="420" height="72" rx="24"/><rect x="390" y="630" width="420" height="72" rx="24"/>
+  </g>
+  <g fill="white" font-family="Inter, Arial" font-size="24" font-weight="600" text-anchor="middle"><text x="600" y="125">Chat Interface</text><text x="600" y="235">FastAPI Backend</text><text x="600" y="345">Hybrid Retrieval</text><text x="600" y="455">RRF Ranking</text><text x="600" y="565">Recommendation Engine</text><text x="600" y="675">Premium Cards</text></g>
+  <defs><linearGradient id="g" x1="600" y1="90" x2="600" y2="710"><stop stop-color="#818CF8"/><stop offset="0.5" stop-color="#38BDF8"/><stop offset="1" stop-color="#10B981"/></linearGradient></defs>
+</svg>

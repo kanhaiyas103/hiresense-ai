@@ -1,13 +1,24 @@
 ﻿"use client";
 
 import { AnimatePresence, domAnimation, LazyMotion, m, MotionConfig } from "framer-motion";
-import { Command, PanelLeft, ShieldCheck, Sparkles, Wifi, WifiOff } from "lucide-react";
+import {
+  Command,
+  HelpCircle,
+  PanelLeft,
+  Settings,
+  ShieldCheck,
+  Sparkles,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { ApiToast } from "@/components/chat/api-toast";
 import { ConversationSidebar } from "@/components/chat/conversation-sidebar";
+import { KeyboardShortcutsModal } from "@/components/chat/keyboard-shortcuts-modal";
 import { MessageBubble } from "@/components/chat/message-bubble";
 import { PromptComposer } from "@/components/chat/prompt-composer";
+import { SettingsPanel } from "@/components/chat/settings-panel";
 import { SuggestionCards } from "@/components/chat/suggestion-cards";
 import { TypingIndicator } from "@/components/chat/typing-indicator";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
@@ -50,6 +61,8 @@ export function ChatShell() {
   const [isTyping, setIsTyping] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [shortcutsOpen, setShortcutsOpen] = useState(false);
   const [healthState, setHealthState] = useState<HealthState>("checking");
   const [pendingConversationId, setPendingConversationId] = useState<string | null>(null);
   const [toast, setToast] = useState<ToastState | null>(null);
@@ -59,23 +72,30 @@ export function ChatShell() {
   const requestAbortRef = useRef<AbortController | null>(null);
   const isMountedRef = useRef(true);
 
+  const visibleConversations = useMemo(
+    () => conversations.filter((conversation) => conversation.status !== "archived"),
+    [conversations],
+  );
+
   const filteredConversations = useMemo(() => {
     const query = search.trim().toLowerCase();
-    if (!query) {
-      return conversations;
-    }
+    const searched = query
+      ? visibleConversations.filter((conversation) =>
+          [conversation.title, conversation.summary, conversation.status]
+            .join(" ")
+            .toLowerCase()
+            .includes(query),
+        )
+      : visibleConversations;
 
-    return conversations.filter((conversation) =>
-      [conversation.title, conversation.summary, conversation.status]
-        .join(" ")
-        .toLowerCase()
-        .includes(query),
-    );
-  }, [conversations, search]);
+    return [...searched].sort((a, b) => Number(Boolean(b.pinned)) - Number(Boolean(a.pinned)));
+  }, [visibleConversations, search]);
 
   const activeConversation =
     conversations.find((conversation) => conversation.id === activeConversationId) ??
-    conversations[0];
+    visibleConversations[0] ??
+    conversations[0] ??
+    createNewConversation();
   const activeConversationIsPending = pendingConversationId === activeConversation.id;
 
   const handleNewConversation = useCallback(() => {
@@ -87,6 +107,56 @@ export function ChatShell() {
     setFailedRequest(null);
     setMobileSidebarOpen(false);
   }, []);
+
+  const handleDeleteConversation = useCallback((id: string) => {
+    setConversations((current) => {
+      const next = current.filter((conversation) => conversation.id !== id);
+      if (id === activeConversationId) {
+        setActiveConversationId(next.find((conversation) => conversation.status !== "archived")?.id ?? next[0]?.id ?? "");
+      }
+      return next.length ? next : [createNewConversation()];
+    });
+  }, [activeConversationId]);
+
+  const handleArchiveConversation = useCallback((id: string) => {
+    setConversations((current) =>
+      current.map((conversation) =>
+        conversation.id === id
+          ? { ...conversation, status: "archived", pinned: false, updatedAt: "Now" }
+          : conversation,
+      ),
+    );
+    if (id === activeConversationId) {
+      const next = conversations.find(
+        (conversation) => conversation.id !== id && conversation.status !== "archived",
+      );
+      if (next) setActiveConversationId(next.id);
+    }
+  }, [activeConversationId, conversations]);
+
+  function handleRenameConversation(id: string, title: string) {
+    setConversations((current) =>
+      current.map((conversation) =>
+        conversation.id === id ? { ...conversation, title, updatedAt: "Now" } : conversation,
+      ),
+    );
+  }
+
+  function handlePinConversation(id: string) {
+    setConversations((current) =>
+      current.map((conversation) =>
+        conversation.id === id ? { ...conversation, pinned: !conversation.pinned } : conversation,
+      ),
+    );
+  }
+
+  function handleClearConversations() {
+    const conversation = createNewConversation();
+    setConversations([conversation]);
+    setActiveConversationId(conversation.id);
+    setPrompt("");
+    setToast({ title: "Workspace reset", description: "Conversations were cleared locally." });
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -135,6 +205,12 @@ export function ChatShell() {
         searchInputIntentRef.current = true;
         setSidebarCollapsed(false);
         setMobileSidebarOpen(true);
+      }
+
+      if (event.key === "Escape") {
+        setSettingsOpen(false);
+        setShortcutsOpen(false);
+        setMobileSidebarOpen(false);
       }
     };
 
@@ -220,7 +296,7 @@ export function ChatShell() {
 
   async function handleSubmit() {
     const content = prompt.trim();
-    if (!content || isTyping) {
+    if (!content || isTyping || !activeConversation.id) {
       return;
     }
 
@@ -291,6 +367,10 @@ export function ChatShell() {
               setActiveConversationId(id);
               setMobileSidebarOpen(false);
             }}
+            onRenameConversation={handleRenameConversation}
+            onDeleteConversation={handleDeleteConversation}
+            onPinConversation={handlePinConversation}
+            onArchiveConversation={handleArchiveConversation}
             onToggleCollapsed={() => setSidebarCollapsed((value) => !value)}
             onToggleMobile={() => setMobileSidebarOpen((value) => !value)}
           />
@@ -301,6 +381,8 @@ export function ChatShell() {
               healthState={healthState}
               sidebarCollapsed={sidebarCollapsed}
               onOpenSidebar={() => setSidebarCollapsed(false)}
+              onOpenSettings={() => setSettingsOpen(true)}
+              onOpenShortcuts={() => setShortcutsOpen(true)}
             />
 
             <section className="relative flex min-h-0 flex-1 flex-col">
@@ -312,7 +394,7 @@ export function ChatShell() {
                   ) : (
                     <>
                       <ConversationContext conversation={activeConversation} />
-                      <div className="space-y-6">
+                      <div className="space-y-7">
                         {activeConversation.messages.map((message) => (
                           <MessageBubble key={message.id} message={message} />
                         ))}
@@ -337,6 +419,17 @@ export function ChatShell() {
             </section>
           </main>
 
+          <SettingsPanel
+            open={settingsOpen}
+            apiStatus={healthState}
+            conversationCount={visibleConversations.length}
+            onClose={() => setSettingsOpen(false)}
+            onClearConversations={handleClearConversations}
+            onOpenShortcuts={() => setShortcutsOpen(true)}
+            onApiStatusChange={setHealthState}
+          />
+          <KeyboardShortcutsModal open={shortcutsOpen} onClose={() => setShortcutsOpen(false)} />
+
           <AnimatePresence>
             {toast ? (
               <ApiToast
@@ -358,11 +451,15 @@ function ChatTopbar({
   healthState,
   sidebarCollapsed,
   onOpenSidebar,
+  onOpenSettings,
+  onOpenShortcuts,
 }: {
   title: string;
   healthState: HealthState;
   sidebarCollapsed: boolean;
   onOpenSidebar: () => void;
+  onOpenSettings: () => void;
+  onOpenShortcuts: () => void;
 }) {
   const isOnline = healthState === "online";
   const healthLabel =
@@ -397,6 +494,12 @@ function ChatTopbar({
 
         <div className="flex items-center gap-2">
           <ThemeToggle />
+          <Button variant="ghost" size="icon" aria-label="Open keyboard shortcuts" onClick={onOpenShortcuts}>
+            <HelpCircle className="h-4 w-4" aria-hidden="true" />
+          </Button>
+          <Button variant="ghost" size="icon" aria-label="Open settings" onClick={onOpenSettings}>
+            <Settings className="h-4 w-4" aria-hidden="true" />
+          </Button>
           <Badge className="hidden gap-1.5 sm:inline-flex">
             {isOnline ? (
               <Wifi className="h-3.5 w-3.5" aria-hidden="true" />
@@ -430,7 +533,7 @@ function EmptyConversation({ onSelectPrompt }: { onSelectPrompt: (prompt: string
       >
         <Badge variant="accent" className="mb-5 gap-2">
           <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-          Conversational assessment intelligence
+          Welcome to HireSense AI
         </Badge>
         <h1 className="text-balance text-4xl font-semibold tracking-[-0.07em] sm:text-5xl lg:text-6xl">
           Start with the role.
@@ -444,7 +547,16 @@ function EmptyConversation({ onSelectPrompt }: { onSelectPrompt: (prompt: string
         </p>
       </m.div>
 
-      <div className="mt-10">
+      <div className="mt-10 grid gap-3 sm:grid-cols-3">
+        {["Catalog-grounded", "Stateless replay", "Hybrid retrieval"].map((feature) => (
+          <div key={feature} className="rounded-3xl border border-white/10 bg-white/[0.04] p-4 text-center text-sm text-muted-foreground">
+            <Sparkles className="mx-auto mb-2 h-4 w-4 text-indigo-200" aria-hidden="true" />
+            {feature}
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-8">
         <SuggestionCards suggestions={suggestions} onSelect={onSelectPrompt} />
       </div>
 
@@ -488,6 +600,7 @@ function ConversationContext({ conversation }: { conversation: Conversation }) {
           </h1>
         </div>
         <div className="flex flex-wrap gap-2">
+          {conversation.pinned ? <Badge variant="accent">Pinned</Badge> : null}
           <Badge>{conversation.status}</Badge>
           <Badge>{conversation.updatedAt}</Badge>
         </div>
@@ -520,4 +633,3 @@ function titleFromPrompt(prompt: string) {
   const words = prompt.split(/\s+/).filter(Boolean).slice(0, 5).join(" ");
   return words.length > 36 ? `${words.slice(0, 36)}…` : words || "New conversation";
 }
-

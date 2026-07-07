@@ -1,7 +1,20 @@
-"use client";
+﻿"use client";
 
-import { Menu, MessageSquarePlus, PanelLeftClose, Search, Sparkles } from "lucide-react";
+import {
+  Archive,
+  Check,
+  Menu,
+  MessageSquarePlus,
+  PanelLeftClose,
+  Pencil,
+  Pin,
+  Search,
+  Sparkles,
+  Trash2,
+  X,
+} from "lucide-react";
 import { m } from "framer-motion";
+import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import type { Conversation } from "@/lib/chat-types";
@@ -17,6 +30,10 @@ type ConversationSidebarProps = {
   onSearchChange: (value: string) => void;
   onNewConversation: () => void;
   onSelectConversation: (id: string) => void;
+  onRenameConversation: (id: string, title: string) => void;
+  onDeleteConversation: (id: string) => void;
+  onPinConversation: (id: string) => void;
+  onArchiveConversation: (id: string) => void;
   onToggleCollapsed: () => void;
   onToggleMobile: () => void;
 };
@@ -30,9 +47,33 @@ export function ConversationSidebar({
   onSearchChange,
   onNewConversation,
   onSelectConversation,
+  onRenameConversation,
+  onDeleteConversation,
+  onPinConversation,
+  onArchiveConversation,
   onToggleCollapsed,
   onToggleMobile,
 }: ConversationSidebarProps) {
+  const [renamingId, setRenamingId] = useState<string | null>(null);
+  const [draftTitle, setDraftTitle] = useState("");
+
+  function startRename(conversation: Conversation) {
+    setRenamingId(conversation.id);
+    setDraftTitle(conversation.title);
+  }
+
+  function commitRename() {
+    if (!renamingId) {
+      return;
+    }
+    const title = draftTitle.trim();
+    if (title) {
+      onRenameConversation(renamingId, title);
+    }
+    setRenamingId(null);
+    setDraftTitle("");
+  }
+
   return (
     <>
       <Button
@@ -121,46 +162,120 @@ export function ConversationSidebar({
               </p>
             ) : null}
             <div className="space-y-1.5">
+              {conversations.length === 0 ? (
+                <EmptyConversationList collapsed={collapsed} searching={Boolean(search.trim())} />
+              ) : null}
               {conversations.map((conversation) => (
-                <m.button
+                <m.div
                   key={conversation.id}
                   layout
-                  type="button"
-                  onClick={() => onSelectConversation(conversation.id)}
                   className={cn(
-                    "focus-ring w-full rounded-2xl border px-3 py-3 text-left transition",
+                    "group rounded-2xl border transition",
                     conversation.id === activeConversationId
                       ? "border-indigo-300/25 bg-indigo-400/10"
                       : "border-transparent hover:border-white/10 hover:bg-white/[0.045]",
                   )}
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-xs font-semibold">
-                      {conversation.title.charAt(0)}
-                    </span>
-                    {!collapsed ? (
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium">
-                          {conversation.title}
-                        </span>
-                        <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                          {conversation.summary}
-                        </span>
+                  <button
+                    type="button"
+                    onClick={() => onSelectConversation(conversation.id)}
+                    className="focus-ring w-full rounded-2xl px-3 py-3 text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] text-xs font-semibold">
+                        {conversation.pinned ? <Pin className="h-3.5 w-3.5" aria-hidden="true" /> : conversation.title.charAt(0)}
                       </span>
+                      {!collapsed ? (
+                        <span className="min-w-0 flex-1">
+                          {renamingId === conversation.id ? (
+                            <span className="flex items-center gap-1" onClick={(event) => event.stopPropagation()}>
+                              <input
+                                value={draftTitle}
+                                autoFocus
+                                onChange={(event) => setDraftTitle(event.target.value)}
+                                onKeyDown={(event) => {
+                                  if (event.key === "Enter") commitRename();
+                                  if (event.key === "Escape") setRenamingId(null);
+                                }}
+                                className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/20 px-2 py-1 text-sm outline-none"
+                              />
+                              <button type="button" aria-label="Save name" onClick={commitRename}>
+                                <Check className="h-3.5 w-3.5" />
+                              </button>
+                            </span>
+                          ) : (
+                            <span className="block truncate text-sm font-medium">
+                              {conversation.title}
+                            </span>
+                          )}
+                          <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                            {conversation.summary}
+                          </span>
+                        </span>
+                      ) : null}
+                    </div>
+                    {!collapsed ? (
+                      <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
+                        <span className="capitalize">{conversation.status}</span>
+                        <span>{conversation.updatedAt}</span>
+                      </div>
                     ) : null}
-                  </div>
+                  </button>
                   {!collapsed ? (
-                    <div className="mt-2 flex items-center justify-between text-[11px] text-muted-foreground">
-                      <span className="capitalize">{conversation.status}</span>
-                      <span>{conversation.updatedAt}</span>
+                    <div className="flex items-center gap-1 px-2 pb-2 opacity-100 transition sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100">
+                      <IconAction label="Rename chat" onClick={() => startRename(conversation)} icon={Pencil} />
+                      <IconAction label={conversation.pinned ? "Unpin chat" : "Pin chat"} onClick={() => onPinConversation(conversation.id)} icon={Pin} />
+                      <IconAction label="Archive chat" onClick={() => onArchiveConversation(conversation.id)} icon={Archive} />
+                      <IconAction label="Delete chat" onClick={() => onDeleteConversation(conversation.id)} icon={Trash2} danger />
                     </div>
                   ) : null}
-                </m.button>
+                </m.div>
               ))}
             </div>
           </div>
         </div>
       </aside>
     </>
+  );
+}
+
+function IconAction({
+  label,
+  onClick,
+  icon: Icon,
+  danger = false,
+}: {
+  label: string;
+  onClick: () => void;
+  icon: typeof X;
+  danger?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      className={cn(
+        "focus-ring rounded-full p-1.5 text-muted-foreground transition hover:bg-white/[0.08] hover:text-foreground",
+        danger && "hover:text-rose-200",
+      )}
+      aria-label={label}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick();
+      }}
+    >
+      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
+    </button>
+  );
+}
+
+function EmptyConversationList({ collapsed, searching }: { collapsed: boolean; searching: boolean }) {
+  if (collapsed) return null;
+  return (
+    <div className="rounded-3xl border border-white/10 bg-white/[0.035] p-4 text-center">
+      <p className="text-sm font-medium">{searching ? "No conversations found" : "No active chats"}</p>
+      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+        {searching ? "Try another search term or start a new chat." : "Start with a role, skill, or hiring scenario."}
+      </p>
+    </div>
   );
 }

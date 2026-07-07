@@ -1,4 +1,4 @@
-import {
+﻿import {
   BrainCircuit,
   DatabaseZap,
   GitBranch,
@@ -14,11 +14,18 @@ export const siteConfig = {
   name: "HireSense AI",
   subtitle: "Conversational Assessment Intelligence",
   description:
-    "A polished interface foundation for catalog-grounded SHL assessment recommendations.",
+    "A production-quality AI recruiting product for grounded SHL assessment recommendations.",
+  url: "https://hiresense-ai.vercel.app",
+  links: {
+    github: "https://github.com/your-username/hiresense-ai",
+    demo: "https://hiresense-ai.vercel.app",
+    linkedin: "https://www.linkedin.com/in/your-profile",
+  },
   nav: [
-    { label: "Features", href: "#features" },
-    { label: "Technology", href: "#technology" },
-    { label: "Architecture", href: "#architecture" },
+    { label: "Product", href: "/" },
+    { label: "Chat", href: "/chat" },
+    { label: "Architecture", href: "/architecture" },
+    { label: "About", href: "/about" },
   ],
 };
 
@@ -26,25 +33,25 @@ export const features = [
   {
     title: "Conversational intake",
     description:
-      "Guide hiring teams from vague requirements to structured assessment intent with a calm, focused experience.",
+      "Turn vague hiring conversations into structured assessment requirements without forcing recruiters into forms.",
     icon: MessageSquareText,
   },
   {
     title: "Catalog-grounded outputs",
     description:
-      "Recommendation identities, URLs, and test metadata remain anchored to trusted assessment records.",
+      "Recommendation names, URLs, and test metadata stay anchored to trusted SHL catalog records.",
     icon: ShieldCheck,
   },
   {
     title: "Hybrid evidence layer",
     description:
-      "Semantic search, lexical signals, and deterministic scoring are presented as a coherent intelligence layer.",
+      "Semantic retrieval, lexical matching, metadata scoring, and RRF work together before recommendations appear.",
     icon: Radar,
   },
   {
-    title: "Executive-ready clarity",
+    title: "Premium decision surface",
     description:
-      "Dense assessment logic is translated into readable, confidence-building product surfaces.",
+      "Interactive recommendation cards make assessment selection feel clear, confident, and recruiter-ready.",
     icon: Sparkles,
   },
 ];
@@ -56,18 +63,22 @@ export const technologies = [
   "TailwindCSS",
   "shadcn/ui",
   "Framer Motion",
-  "Lucide React",
+  "FastAPI",
+  "FAISS",
+  "Sentence Transformers",
 ];
 
 export const architectureSteps = [
   {
     title: "Conversation signal",
-    description: "The interface frames user intent, constraints, and refinements as first-class product signals.",
+    description:
+      "The interface frames role intent, constraints, refinements, and comparison requests as structured product signals.",
     icon: BrainCircuit,
   },
   {
     title: "Evidence retrieval",
-    description: "Semantic, lexical, and metadata layers combine before recommendation objects are presented.",
+    description:
+      "Semantic, lexical, metadata, and rank-fusion layers collect and order candidate assessments.",
     icon: GitBranch,
   },
   {
@@ -77,25 +88,26 @@ export const architectureSteps = [
   },
   {
     title: "Decision surface",
-    description: "The UI is structured for future chat, comparisons, traceability, and admin review.",
+    description:
+      "The UI translates dense retrieval evidence into beautiful, actionable recommendation cards.",
     icon: Workflow,
   },
 ];
 
 export const productPrinciples = [
   {
-    title: "Precise",
-    description: "Every screen prioritizes grounded recommendations over ornamental noise.",
-    icon: Layers3,
+    title: "Grounded",
+    description: "Every recommendation is designed to stay tied to the SHL catalog and deployment contract.",
+    icon: ShieldCheck,
   },
   {
     title: "Fast",
-    description: "Layouts are lean, responsive, and ready for production-grade interaction design.",
+    description: "The frontend is statically optimized and the backend uses prebuilt retrieval artifacts.",
     icon: Sparkles,
   },
   {
-    title: "Trustworthy",
-    description: "The product language reinforces evidence, constraints, and catalog-backed confidence.",
-    icon: ShieldCheck,
+    title: "Defensible",
+    description: "Architecture, evaluation, and product design choices are easy to explain in technical interviews.",
+    icon: Layers3,
   },
 ];

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { Menu, Sparkles, X } from "lucide-react";
 import Link from "next/link";
@@ -25,9 +25,10 @@ export function SiteHeader() {
         <Link href="/" className="flex items-center gap-3" aria-label="HireSense AI home">
           <span
             aria-hidden="true"
-            className="flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.07] shadow-glow"
+            className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-white/[0.07] shadow-glow"
           >
-            <Sparkles className="h-4 w-4 text-indigo-200" aria-hidden="true" />
+            <span className="absolute inset-0 bg-gradient-to-br from-indigo-400/30 via-sky-300/20 to-emerald-300/20" />
+            <Sparkles className="relative h-4 w-4 text-white" aria-hidden="true" />
           </span>
           <span className="leading-none">
             <span className="block text-sm font-semibold tracking-[-0.03em]">
@@ -39,7 +40,7 @@ export function SiteHeader() {
           </span>
         </Link>
 
-        <nav className="hidden items-center gap-1 md:flex">
+        <nav className="hidden items-center gap-1 md:flex" aria-label="Primary navigation">
           {siteConfig.nav.map((item) => (
             <Button key={item.href} asChild variant="ghost" size="sm">
               <Link href={item.href}>{item.label}</Link>
@@ -50,7 +51,7 @@ export function SiteHeader() {
         <div className="flex items-center gap-2">
           <ThemeToggle />
           <Button className="hidden sm:inline-flex" asChild size="sm" variant="secondary">
-            <Link href="#cta">Request access</Link>
+            <Link href="/chat">Open app</Link>
           </Button>
           <Button
             className="md:hidden"
