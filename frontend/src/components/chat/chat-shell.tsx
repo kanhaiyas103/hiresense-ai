@@ -54,7 +54,7 @@ export function ChatShell() {
   const [conversations, setConversations] =
     useState<Conversation[]>(initialConversations);
   const [activeConversationId, setActiveConversationId] = useState(
-    initialConversations[0].id,
+    initialConversations[0]?.id ?? "",
   );
   const [search, setSearch] = useState("");
   const [prompt, setPrompt] = useState("");
@@ -95,8 +95,8 @@ export function ChatShell() {
     conversations.find((conversation) => conversation.id === activeConversationId) ??
     visibleConversations[0] ??
     conversations[0] ??
-    createNewConversation();
-  const activeConversationIsPending = pendingConversationId === activeConversation.id;
+    null;
+  const activeConversationIsPending = pendingConversationId === activeConversation?.id;
 
   const handleNewConversation = useCallback(() => {
     const conversation = createNewConversation();
@@ -114,7 +114,7 @@ export function ChatShell() {
       if (id === activeConversationId) {
         setActiveConversationId(next.find((conversation) => conversation.status !== "archived")?.id ?? next[0]?.id ?? "");
       }
-      return next.length ? next : [createNewConversation()];
+      return next;
     });
   }, [activeConversationId]);
 
@@ -130,7 +130,7 @@ export function ChatShell() {
       const next = conversations.find(
         (conversation) => conversation.id !== id && conversation.status !== "archived",
       );
-      if (next) setActiveConversationId(next.id);
+      setActiveConversationId(next?.id ?? "");
     }
   }, [activeConversationId, conversations]);
 
@@ -151,9 +151,8 @@ export function ChatShell() {
   }
 
   function handleClearConversations() {
-    const conversation = createNewConversation();
-    setConversations([conversation]);
-    setActiveConversationId(conversation.id);
+    setConversations([]);
+    setActiveConversationId("");
     setPrompt("");
     setToast({ title: "Workspace reset", description: "Conversations were cleared locally." });
   }
@@ -181,6 +180,8 @@ export function ChatShell() {
   }, []);
 
   useEffect(() => {
+    isMountedRef.current = true;
+
     return () => {
       isMountedRef.current = false;
       requestAbortRef.current?.abort();
@@ -294,41 +295,51 @@ export function ChatShell() {
     }
   }
 
-  async function handleSubmit() {
-    const content = prompt.trim();
-    if (!content || isTyping || !activeConversation.id) {
+  async function submitPrompt(content: string, options: { forceNewConversation?: boolean } = {}) {
+    const trimmed = content.trim();
+    if (!trimmed || isTyping) {
       return;
     }
 
-    const conversationId = activeConversation.id;
+    const baseConversation =
+      options.forceNewConversation || !activeConversation
+        ? createNewConversation()
+        : activeConversation;
+    const conversationId = baseConversation.id;
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
       role: "user",
-      content,
+      content: trimmed,
       createdAt: new Date().toISOString(),
     };
-    const nextMessages = [...activeConversation.messages, userMessage];
+    const nextConversation: Conversation = {
+      ...baseConversation,
+      title:
+        baseConversation.messages.length === 0
+          ? titleFromPrompt(trimmed)
+          : baseConversation.title,
+      summary: trimmed,
+      updatedAt: "Now",
+      status: "active",
+      messages: [...baseConversation.messages, userMessage],
+    };
 
     setPrompt("");
-    setConversations((current) =>
-      current.map((conversation) =>
-        conversation.id === conversationId
-          ? {
-              ...conversation,
-              title:
-                conversation.messages.length === 0
-                  ? titleFromPrompt(content)
-                  : conversation.title,
-              summary: content,
-              updatedAt: "Now",
-              status: "active",
-              messages: nextMessages,
-            }
-          : conversation,
-      ),
-    );
+    setActiveConversationId(conversationId);
+    setConversations((current) => {
+      const exists = current.some((conversation) => conversation.id === conversationId);
+      return exists
+        ? current.map((conversation) =>
+            conversation.id === conversationId ? nextConversation : conversation,
+          )
+        : [nextConversation, ...current];
+    });
 
-    await requestAssistantResponse(conversationId, nextMessages);
+    await requestAssistantResponse(conversationId, nextConversation.messages);
+  }
+
+  async function handleSubmit() {
+    await submitPrompt(prompt);
   }
 
   function handleRetry() {
@@ -357,7 +368,7 @@ export function ChatShell() {
         <div className="flex min-h-screen bg-background text-foreground">
           <ConversationSidebar
             conversations={filteredConversations}
-            activeConversationId={activeConversation.id}
+            activeConversationId={activeConversation?.id ?? ""}
             collapsed={sidebarCollapsed}
             mobileOpen={mobileSidebarOpen}
             search={search}
@@ -377,7 +388,7 @@ export function ChatShell() {
 
           <main className="flex min-h-screen min-w-0 flex-1 flex-col">
             <ChatTopbar
-              title={activeConversation.title}
+              title={activeConversation?.title ?? "New assessment search"}
               healthState={healthState}
               sidebarCollapsed={sidebarCollapsed}
               onOpenSidebar={() => setSidebarCollapsed(false)}
@@ -389,8 +400,12 @@ export function ChatShell() {
               <div className="subtle-grid pointer-events-none absolute inset-x-0 top-0 h-80 opacity-60" />
               <div className="relative flex-1 overflow-y-auto px-4 pb-36 pt-6 sm:px-6 lg:px-8">
                 <div className="mx-auto flex max-w-5xl flex-col gap-8">
-                  {activeConversation.messages.length === 0 ? (
-                    <EmptyConversation onSelectPrompt={setPrompt} />
+                  {!activeConversation || activeConversation.messages.length === 0 ? (
+                    <EmptyConversation
+                      onSelectPrompt={(selectedPrompt) => {
+                        void submitPrompt(selectedPrompt, { forceNewConversation: true });
+                      }}
+                    />
                   ) : (
                     <>
                       <ConversationContext conversation={activeConversation} />
@@ -514,7 +529,7 @@ function ChatTopbar({
           </Badge>
           <Badge className="hidden gap-1.5 md:inline-flex">
             <Command className="h-3.5 w-3.5" aria-hidden="true" />
-            ⌘K · ⌘N
+            {"\u2318K \u00b7 \u2318N"}
           </Badge>
         </div>
       </div>

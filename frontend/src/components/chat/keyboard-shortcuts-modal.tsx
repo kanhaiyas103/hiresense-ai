@@ -2,6 +2,7 @@
 
 import { AnimatePresence, m } from "framer-motion";
 import { Command, CornerDownLeft, Search, X } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 import { Badge } from "@/components/ui/badge";
 
@@ -15,6 +16,30 @@ const shortcuts = [
 ];
 
 export function KeyboardShortcutsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusTimer = globalThis.setTimeout(() => {
+      panelRef.current
+        ?.querySelector<HTMLElement>(
+          'button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])',
+        )
+        ?.focus();
+    }, 0);
+
+    return () => {
+      globalThis.clearTimeout(focusTimer);
+      previousFocusRef.current?.focus();
+    };
+  }, [open]);
+
   return (
     <AnimatePresence>
       {open ? (
@@ -33,6 +58,7 @@ export function KeyboardShortcutsModal({ open, onClose }: { open: boolean; onClo
           }}
         >
           <m.div
+            ref={panelRef}
             initial={{ opacity: 0, y: 20, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 14, scale: 0.98 }}

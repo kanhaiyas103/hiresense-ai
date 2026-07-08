@@ -3,7 +3,7 @@ import type { ApiErrorKind } from "@/lib/api/types";
 const DEFAULT_API_BASE_URL =
   "https://kanhaiyasharmaa-shl-assessment-recommender.hf.space";
 
-const REQUEST_TIMEOUT_MS = 10_000;
+const REQUEST_TIMEOUT_MS = 30_000;
 
 type ApiClientOptions = {
   method?: "GET" | "POST";
@@ -71,7 +71,7 @@ export async function apiClient<TResponse>(
     if (timeoutController.signal.aborted) {
       throw new ApiClientError({
         kind: "timeout",
-        message: "The backend took longer than 10 seconds to respond.",
+        message: "The backend took longer than 30 seconds to respond.",
       });
     }
 

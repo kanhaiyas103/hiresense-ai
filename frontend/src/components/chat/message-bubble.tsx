@@ -11,8 +11,16 @@ type MessageBubbleProps = {
   message: ChatMessage;
 };
 
+const REFINEMENT_CHIPS = [
+  "Different duration",
+  "Different seniority",
+  "Different skills",
+  "Different assessment type",
+] as const;
+
 export function MessageBubble({ message }: MessageBubbleProps) {
   const isUser = message.role === "user";
+  const hasRecommendations = Boolean(message.recommendations?.length);
 
   return (
     <m.article
@@ -27,7 +35,7 @@ export function MessageBubble({ message }: MessageBubbleProps) {
           <Bot className="h-4 w-4" aria-hidden="true" />
         </Avatar>
       ) : null}
-      <div className={cn("max-w-[min(880px,94%)]", isUser && "order-first")}> 
+      <div className={cn("max-w-[min(940px,94%)]", isUser && "order-first")}>
         <div
           className={cn(
             "rounded-[1.35rem] border px-4 py-3 shadow-soft-xl sm:px-5 sm:py-4",
@@ -38,25 +46,28 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         >
           <MarkdownContent content={message.content} />
         </div>
-        {message.recommendations?.length ? (
-          <m.div
-            layout
-            className="mt-4 grid gap-4 lg:grid-cols-2"
-            initial="hidden"
-            animate="show"
-            variants={{
-              hidden: {},
-              show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
-            }}
-          >
-            {message.recommendations.map((recommendation, index) => (
-              <RecommendationCard
-                key={recommendation.id}
-                recommendation={recommendation}
-                index={index}
-              />
-            ))}
-          </m.div>
+        {hasRecommendations ? (
+          <>
+            <m.div
+              layout
+              className="mt-4 grid gap-4 lg:grid-cols-2"
+              initial="hidden"
+              animate="show"
+              variants={{
+                hidden: {},
+                show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
+              }}
+            >
+              {message.recommendations?.map((recommendation, index) => (
+                <RecommendationCard
+                  key={recommendation.id}
+                  recommendation={recommendation}
+                  index={index}
+                />
+              ))}
+            </m.div>
+            <FollowUpRefinement />
+          </>
         ) : null}
       </div>
       {isUser ? (
@@ -65,6 +76,35 @@ export function MessageBubble({ message }: MessageBubbleProps) {
         </Avatar>
       ) : null}
     </m.article>
+  );
+}
+
+function FollowUpRefinement() {
+  return (
+    <m.aside
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.28, ease: "easeOut", delay: 0.12 }}
+      className="mt-4 rounded-[1.35rem] border border-white/10 bg-white/[0.035] p-4"
+      aria-label="Recommendation refinement suggestions"
+    >
+      <p className="text-sm font-semibold tracking-[-0.02em] text-foreground">
+        Need another shortlist?
+      </p>
+      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+        Try refining your request:
+      </p>
+      <div className="mt-3 flex flex-wrap gap-2">
+        {REFINEMENT_CHIPS.map((chip) => (
+          <span
+            key={chip}
+            className="rounded-full border border-white/10 bg-white/[0.045] px-3 py-1.5 text-xs font-medium text-zinc-300"
+          >
+            {chip}
+          </span>
+        ))}
+      </div>
+    </m.aside>
   );
 }
 

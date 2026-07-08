@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import {
   ArrowUpRight,
@@ -7,6 +7,7 @@ import {
   ChevronDown,
   Clock3,
   Copy,
+  FileText,
   RadioTower,
   Share2,
   ShieldCheck,
@@ -14,15 +15,26 @@ import {
   Zap,
 } from "lucide-react";
 import { AnimatePresence, m } from "framer-motion";
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
+import type { LucideIcon } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
 import type { Recommendation } from "@/lib/chat-types";
 import { cn } from "@/lib/utils";
 
 type RecommendationCardProps = {
   recommendation: Recommendation;
   index?: number;
+};
+
+const TEST_TYPE_LABELS: Record<string, string> = {
+  K: "Knowledge & Skills",
+  A: "Ability & Aptitude",
+  P: "Personality & Behavior",
+  C: "Competencies",
+  S: "Simulation",
+  B: "Biodata & Situational Judgement",
+  D: "Development & 360",
+  E: "Assessment Exercises",
 };
 
 const KNOWN_SKILLS = [
@@ -36,10 +48,12 @@ const KNOWN_SKILLS = [
   "Docker",
   "Linux",
   "Networking",
+  "REST API",
   "REST",
   "SQL",
   "Excel",
   "Word",
+  "Microsoft Office",
   "Customer Service",
   "Contact Center",
   "Call Center",
@@ -47,7 +61,7 @@ const KNOWN_SKILLS = [
   "Finance",
   "Accounting",
   "Statistics",
-  "Numerical",
+  "Numerical Reasoning",
   "Safety",
   "Dependability",
   "Healthcare",
@@ -56,89 +70,80 @@ const KNOWN_SKILLS = [
   "Judgement",
 ] as const;
 
-export function RecommendationCard({ recommendation, index = 0 }: RecommendationCardProps) {
+const DEFAULT_RATIONALE =
+  "Selected because it aligns with the requested role and required skills.";
+
+function RecommendationCardComponent({
+  recommendation,
+  index = 0,
+}: RecommendationCardProps) {
   const [expanded, setExpanded] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
-  const description =
-    recommendation.description ??
-    recommendation.rationale ??
-    "Official SHL catalog assessment recommended by the deployed assessment intelligence engine.";
-  const skills = useMemo(() => extractSkills(recommendation, description), [recommendation, description]);
-  const matchScore = recommendation.confidence
-    ? Math.round(recommendation.confidence * 100)
-    : null;
-  const collapsedDescription =
-    description.length > 138 ? `${description.slice(0, 138).trim()}…` : description;
+  const viewModel = useMemo(() => buildRecommendationViewModel(recommendation), [recommendation]);
 
-  async function handleCopy() {
-    await copyText(recommendation.url);
-    setToast("URL copied");
-    globalThis.setTimeout(() => setToast(null), 1600);
-  }
-
-  async function handleShare() {
-    if (typeof navigator !== "undefined" && "share" in navigator) {
-      try {
-        await navigator.share({
-          title: recommendation.name,
-          text: `SHL assessment: ${recommendation.name}`,
-          url: recommendation.url,
-        });
-        return;
-      } catch {
-        // Fall back to copying below when native share is unavailable or cancelled.
-      }
+  async function notifyCopy(value: string, label: string) {
+    try {
+      await copyText(value);
+      setToast(label);
+    } catch {
+      setToast("Copy unavailable");
     }
-
-    await handleCopy();
+    globalThis.setTimeout(() => setToast(null), 1600);
   }
 
   return (
     <m.article
       layout
-      initial={{ opacity: 0, y: 18, scale: 0.98 }}
+      initial={{ opacity: 0, y: 22, scale: 0.985 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.34, ease: "easeOut", delay: index * 0.06 }}
-      whileHover={{ y: -4 }}
-      className="group relative isolate overflow-hidden rounded-[1.75rem] p-px"
+      transition={{ duration: 0.36, ease: "easeOut", delay: index * 0.065 }}
+      whileHover={{ y: -5 }}
+      className="group relative isolate overflow-hidden rounded-[1.85rem] p-px"
     >
       <div
-        className="absolute inset-0 rounded-[1.75rem] bg-[conic-gradient(from_180deg_at_50%_50%,rgba(129,140,248,0.08),rgba(56,189,248,0.32),rgba(16,185,129,0.18),rgba(129,140,248,0.08))] opacity-60 blur-[0.5px] transition duration-500 group-hover:opacity-100"
+        className="absolute inset-0 rounded-[1.85rem] bg-[linear-gradient(135deg,rgba(129,140,248,0.55),rgba(45,212,191,0.22),rgba(244,244,245,0.12),rgba(129,140,248,0.36))] opacity-45 blur-[0.5px] transition duration-500 group-hover:opacity-90"
         aria-hidden="true"
       />
-      <div className="relative rounded-[calc(1.75rem-1px)] border border-white/10 bg-zinc-950/78 p-4 shadow-[0_22px_70px_rgba(0,0,0,0.32)] backdrop-blur-2xl transition duration-300 group-hover:border-indigo-200/20 group-hover:bg-zinc-950/88 sm:p-5">
-        <div className="absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent" aria-hidden="true" />
+      <div className="relative overflow-hidden rounded-[calc(1.85rem-1px)] border border-white/10 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.15),transparent_34%),linear-gradient(180deg,rgba(24,24,27,0.94),rgba(9,9,11,0.92))] p-5 shadow-[0_26px_80px_rgba(0,0,0,0.38)] backdrop-blur-2xl transition duration-300 group-hover:border-indigo-200/25 group-hover:shadow-[0_30px_95px_rgba(79,70,229,0.18)] sm:p-6">
+        <div
+          className="absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-white/35 to-transparent"
+          aria-hidden="true"
+        />
 
         <div className="flex items-start justify-between gap-4">
-          <div className="min-w-0">
-            <div className="mb-3 flex flex-wrap items-center gap-2">
-              <Badge variant="accent" className="px-2.5 py-0.5 font-semibold text-indigo-50">
-                {recommendation.testType}
-              </Badge>
-              {matchScore ? <MatchBadge score={matchScore} /> : <VerifiedBadge />}
-              {recommendation.duration ? <MetaPill icon={Clock3} label={recommendation.duration} /> : null}
+          <div className="min-w-0 space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <StatusBadge tone="indigo">{viewModel.testTypeLabel}</StatusBadge>
+              <StatusBadge tone={viewModel.confidenceLabel === "Catalog Match" ? "slate" : "emerald"}>
+                {viewModel.confidenceLabel}
+              </StatusBadge>
             </div>
-            <h3 className="text-balance text-base font-semibold tracking-[-0.035em] text-foreground sm:text-lg">
-              {recommendation.name}
-            </h3>
+            <div>
+              <p className="mb-1 text-[11px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                SHL Assessment
+              </p>
+              <h3 className="text-balance text-lg font-semibold tracking-[-0.04em] text-foreground sm:text-xl">
+                {recommendation.name}
+              </h3>
+            </div>
           </div>
 
           <button
             type="button"
             className={cn(
-              "focus-ring rounded-full border p-2.5 transition",
+              "focus-ring rounded-full border p-2.5 transition duration-200",
               bookmarked
-                ? "border-amber-300/30 bg-amber-300/12 text-amber-100"
+                ? "border-amber-300/30 bg-amber-300/12 text-amber-100 shadow-[0_0_25px_rgba(252,211,77,0.12)]"
                 : "border-white/10 bg-white/[0.045] text-muted-foreground hover:bg-white/[0.08] hover:text-foreground",
             )}
-            aria-label={bookmarked ? "Remove bookmark" : "Bookmark recommendation"}
+            aria-label={bookmarked ? `Remove bookmark for ${recommendation.name}` : `Bookmark ${recommendation.name}`}
             aria-pressed={bookmarked}
             onClick={() => setBookmarked((value) => !value)}
           >
             <m.span
-              animate={bookmarked ? { scale: [1, 1.24, 1], rotate: [0, -8, 0] } : { scale: 1 }}
+              animate={bookmarked ? { scale: [1, 1.22, 1], rotate: [0, -7, 0] } : { scale: 1 }}
               transition={{ duration: 0.28, ease: "easeOut" }}
               className="block"
             >
@@ -147,20 +152,22 @@ export function RecommendationCard({ recommendation, index = 0 }: Recommendation
           </button>
         </div>
 
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">
-          {expanded ? description : collapsedDescription}
-        </p>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          {skills.map((skill) => (
-            <span
-              key={skill}
-              className="rounded-full border border-white/10 bg-white/[0.045] px-2.5 py-1 text-[11px] font-medium text-zinc-300"
-            >
-              {skill}
-            </span>
-          ))}
+        <div className="mt-5 grid gap-2 sm:grid-cols-2">
+          <MetaTile icon={Clock3} label="Duration" value={viewModel.durationLabel} />
+          <MetaTile icon={RadioTower} label="Remote Testing" value={viewModel.remoteTestingLabel} />
+          {recommendation.adaptive ? (
+            <MetaTile icon={Zap} label="Adaptive / IRT" value="Adaptive Assessment" accent />
+          ) : null}
+          <MetaTile icon={ShieldCheck} label="Source" value="Official SHL Catalog" accent />
         </div>
+
+        <section className="mt-5 rounded-3xl border border-white/10 bg-white/[0.035] p-4">
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+            <Sparkles className="h-3.5 w-3.5 text-indigo-200" aria-hidden="true" />
+            Why it fits
+          </div>
+          <p className="mt-3 text-sm leading-6 text-zinc-300">{viewModel.rationale}</p>
+        </section>
 
         <AnimatePresence initial={false}>
           {expanded ? (
@@ -172,61 +179,59 @@ export function RecommendationCard({ recommendation, index = 0 }: Recommendation
               transition={{ duration: 0.24, ease: "easeOut" }}
               className="overflow-hidden"
             >
-              <div className="mt-5 grid gap-2 border-t border-white/10 pt-4 sm:grid-cols-2">
-                {recommendation.remoteTesting !== undefined ? (
-                  <CapabilityPill
-                    icon={RadioTower}
-                    label={recommendation.remoteTesting ? "Remote testing" : "Onsite preferred"}
-                    active={recommendation.remoteTesting}
-                  />
-                ) : null}
-                {recommendation.adaptive !== undefined ? (
-                  <CapabilityPill
-                    icon={Zap}
-                    label={recommendation.adaptive ? "Adaptive / IRT" : "Non-adaptive"}
-                    active={recommendation.adaptive}
-                  />
-                ) : null}
-                <CapabilityPill icon={ShieldCheck} label="Official SHL URL" active />
-                <CapabilityPill icon={Sparkles} label="Catalog-grounded" active />
+              <div className="mt-5 border-t border-white/10 pt-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Search signals
+                </p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {viewModel.skills.map((skill) => (
+                    <span
+                      key={skill}
+                      className="rounded-full border border-white/10 bg-white/[0.045] px-2.5 py-1 text-[11px] font-medium text-zinc-300"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
               </div>
             </m.div>
           ) : null}
         </AnimatePresence>
 
-        <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-center gap-2">
+        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-2">
             <a
               href={recommendation.url}
               target="_blank"
               rel="noreferrer"
-              className="focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-full bg-white px-4 text-sm font-semibold text-zinc-950 shadow-soft-xl transition hover:bg-zinc-200"
+              className="focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-full bg-white px-4 text-sm font-semibold text-zinc-950 shadow-soft-xl transition hover:-translate-y-0.5 hover:bg-zinc-200"
+              aria-label={`Open official SHL page for ${recommendation.name}`}
             >
-              Official SHL
+              Open Official SHL
               <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
             </a>
-            <button
-              type="button"
-              className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.045] text-muted-foreground transition hover:bg-white/[0.08] hover:text-foreground"
-              aria-label={`Copy URL for ${recommendation.name}`}
-              onClick={handleCopy}
-            >
-              <Copy className="h-4 w-4" aria-hidden="true" />
-            </button>
-            <button
-              type="button"
-              className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.045] text-muted-foreground transition hover:bg-white/[0.08] hover:text-foreground"
-              aria-label={`Share ${recommendation.name}`}
-              onClick={handleShare}
-            >
-              <Share2 className="h-4 w-4" aria-hidden="true" />
-            </button>
+            <IconButton
+              label={`Copy assessment name: ${recommendation.name}`}
+              icon={FileText}
+              onClick={() => void notifyCopy(recommendation.name, "Assessment name copied")}
+            />
+            <IconButton
+              label={`Copy assessment URL for ${recommendation.name}`}
+              icon={Copy}
+              onClick={() => void notifyCopy(recommendation.url, "Assessment URL copied")}
+            />
+            <IconButton
+              label={`Share ${recommendation.name}`}
+              icon={Share2}
+              onClick={() => void notifyCopy(recommendation.url, "Share link copied")}
+            />
           </div>
 
           <button
             type="button"
-            className="focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-full px-3 text-xs font-medium text-muted-foreground transition hover:bg-white/[0.06] hover:text-foreground"
+            className="focus-ring inline-flex h-10 items-center justify-center gap-2 rounded-full border border-white/10 bg-white/[0.035] px-3 text-xs font-medium text-muted-foreground transition hover:bg-white/[0.07] hover:text-foreground"
             aria-expanded={expanded}
+            aria-label={`${expanded ? "Collapse" : "Expand"} details for ${recommendation.name}`}
             onClick={() => setExpanded((value) => !value)}
           >
             {expanded ? "Collapse" : "Details"}
@@ -243,7 +248,7 @@ export function RecommendationCard({ recommendation, index = 0 }: Recommendation
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 6, scale: 0.96 }}
               transition={{ duration: 0.18, ease: "easeOut" }}
-              className="absolute bottom-4 right-4 flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-xs font-medium text-emerald-100 shadow-soft-xl backdrop-blur-xl"
+              className="absolute bottom-5 right-5 flex items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-xs font-medium text-emerald-100 shadow-soft-xl backdrop-blur-xl"
               role="status"
             >
               <Check className="h-3.5 w-3.5" aria-hidden="true" />
@@ -256,81 +261,134 @@ export function RecommendationCard({ recommendation, index = 0 }: Recommendation
   );
 }
 
-function MatchBadge({ score }: { score: number }) {
+export const RecommendationCard = memo(RecommendationCardComponent);
+
+function buildRecommendationViewModel(recommendation: Recommendation) {
+  const testTypeLabel = friendlyTestType(recommendation.testType);
+  const confidenceLabel =
+    typeof recommendation.confidence === "number"
+      ? `${Math.round(recommendation.confidence * 100)}% Match`
+      : "Catalog Match";
+  const durationLabel = recommendation.duration ?? "Duration not specified";
+  const remoteTestingLabel = recommendation.remoteTesting
+    ? "Remote Testing Available"
+    : "Availability not specified";
+  const rationale = recommendation.rationale?.trim() || DEFAULT_RATIONALE;
+  const skills = extractSkills(recommendation, rationale, testTypeLabel);
+
+  return {
+    confidenceLabel,
+    durationLabel,
+    rationale,
+    remoteTestingLabel,
+    skills,
+    testTypeLabel,
+  };
+}
+
+function friendlyTestType(value: string) {
+  return TEST_TYPE_LABELS[value] ?? (value || "Assessment");
+}
+
+function StatusBadge({ children, tone }: { children: string; tone: "emerald" | "indigo" | "slate" }) {
   return (
-    <span className="relative inline-flex overflow-hidden rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-100">
-      <m.span
-        className="absolute inset-y-0 left-0 bg-emerald-200/10"
-        initial={{ width: 0 }}
-        animate={{ width: `${score}%` }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        aria-hidden="true"
-      />
-      <span className="relative">{score}% Match</span>
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold",
+        tone === "emerald" && "border-emerald-300/20 bg-emerald-300/10 text-emerald-100",
+        tone === "indigo" && "border-indigo-300/20 bg-indigo-300/10 text-indigo-100",
+        tone === "slate" && "border-white/10 bg-white/[0.055] text-zinc-200",
+      )}
+    >
+      {children}
     </span>
   );
 }
 
-function VerifiedBadge() {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-[11px] font-semibold text-emerald-100">
-      <ShieldCheck className="h-3.5 w-3.5" aria-hidden="true" />
-      Verified
-    </span>
-  );
-}
-
-function MetaPill({ icon: Icon, label }: { icon: typeof Clock3; label: string }) {
-  return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.045] px-2.5 py-1 text-[11px] font-medium text-muted-foreground">
-      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-      {label}
-    </span>
-  );
-}
-
-function CapabilityPill({
+function MetaTile({
   icon: Icon,
   label,
-  active,
+  value,
+  accent = false,
 }: {
-  icon: typeof ShieldCheck;
+  icon: LucideIcon;
   label: string;
-  active: boolean;
+  value: string;
+  accent?: boolean;
 }) {
   return (
     <div
       className={cn(
-        "flex items-center gap-2 rounded-2xl border px-3 py-2 text-xs",
-        active
-          ? "border-emerald-300/15 bg-emerald-300/[0.07] text-emerald-100"
-          : "border-white/10 bg-white/[0.04] text-muted-foreground",
+        "rounded-2xl border p-3 transition",
+        accent
+          ? "border-emerald-300/15 bg-emerald-300/[0.065]"
+          : "border-white/10 bg-white/[0.035]",
       )}
     >
-      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
-      {label}
+      <div className="flex items-start gap-2.5">
+        <span
+          className={cn(
+            "mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-xl",
+            accent ? "bg-emerald-300/10 text-emerald-100" : "bg-white/[0.055] text-indigo-100",
+          )}
+        >
+          <Icon className="h-4 w-4" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+            {label}
+          </p>
+          <p className="mt-1 text-sm font-medium leading-5 text-zinc-100">{value}</p>
+        </div>
+      </div>
     </div>
   );
 }
 
-function extractSkills(recommendation: Recommendation, description: string) {
+function IconButton({
+  label,
+  icon: Icon,
+  onClick,
+}: {
+  label: string;
+  icon: LucideIcon;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      className="focus-ring inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.045] text-muted-foreground transition hover:-translate-y-0.5 hover:bg-white/[0.08] hover:text-foreground"
+      aria-label={label}
+      onClick={onClick}
+    >
+      <Icon className="h-4 w-4" aria-hidden="true" />
+    </button>
+  );
+}
+
+function extractSkills(
+  recommendation: Recommendation,
+  rationale: string,
+  testTypeLabel: string,
+) {
   if (recommendation.skills?.length) {
     return recommendation.skills.slice(0, 5);
   }
 
-  const source = `${recommendation.name} ${recommendation.testType} ${description}`.toLowerCase();
+  const source = `${recommendation.name} ${recommendation.testType} ${testTypeLabel} ${rationale}`.toLowerCase();
   const matches = KNOWN_SKILLS.filter((skill) => source.includes(skill.toLowerCase()));
 
   if (matches.length) {
     return matches.slice(0, 5);
   }
 
-  return [recommendation.testType, "SHL Catalog"];
+  return [testTypeLabel, "SHL Catalog"];
 }
 
 async function copyText(value: string) {
-  if (typeof navigator !== "undefined" && navigator.clipboard) {
-    await navigator.clipboard.writeText(value);
+  if (typeof navigator === "undefined" || !navigator.clipboard) {
+    throw new Error("Clipboard API is unavailable");
   }
-}
 
+  await navigator.clipboard.writeText(value);
+}

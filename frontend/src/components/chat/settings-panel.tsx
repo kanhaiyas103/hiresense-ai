@@ -1,8 +1,8 @@
 ﻿"use client";
 
 import { AnimatePresence, m } from "framer-motion";
-import { Activity, CheckCircle2, Keyboard, Moon, RotateCcw, Settings, Sparkles, Trash2, X } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { Activity, CheckCircle2, Keyboard, Moon, RotateCcw, Settings, Trash2, X } from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Badge } from "@/components/ui/badge";
@@ -28,8 +28,30 @@ export function SettingsPanel({
   onOpenShortcuts,
   onApiStatusChange,
 }: SettingsPanelProps) {
-  const [animationsEnabled, setAnimationsEnabled] = useState(true);
   const [checking, setChecking] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    previousFocusRef.current =
+      document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    const focusTimer = globalThis.setTimeout(() => {
+      panelRef.current
+        ?.querySelector<HTMLElement>(
+          'button, [href], input, textarea, select, [tabindex]:not([tabindex="-1"])',
+        )
+        ?.focus();
+    }, 0);
+
+    return () => {
+      globalThis.clearTimeout(focusTimer);
+      previousFocusRef.current?.focus();
+    };
+  }, [open]);
 
   async function handleHealthCheck() {
     setChecking(true);
@@ -62,6 +84,7 @@ export function SettingsPanel({
           }}
         >
           <m.div
+            ref={panelRef}
             initial={{ opacity: 0, y: 24, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 18, scale: 0.98 }}
@@ -92,9 +115,6 @@ export function SettingsPanel({
             <div className="mt-6 grid gap-3 sm:grid-cols-2">
               <SettingCard icon={Moon} title="Theme" description="Switch between light and dark presentation.">
                 <ThemeToggle />
-              </SettingCard>
-              <SettingCard icon={Sparkles} title="Animations" description="Control local UI motion cues.">
-                <Toggle pressed={animationsEnabled} onPressedChange={setAnimationsEnabled} label="Animations" />
               </SettingCard>
               <SettingCard icon={Activity} title="Reduced motion" description="Honors your system accessibility preference.">
                 <Badge>System controlled</Badge>
@@ -147,28 +167,3 @@ function SettingCard({
     </div>
   );
 }
-
-function Toggle({
-  pressed,
-  onPressedChange,
-  label,
-}: {
-  pressed: boolean;
-  onPressedChange: (pressed: boolean) => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      className="focus-ring inline-flex h-8 w-14 items-center rounded-full border border-white/10 bg-white/[0.06] p-1 transition"
-      aria-label={label}
-      aria-pressed={pressed}
-      onClick={() => onPressedChange(!pressed)}
-    >
-      <span
-        className={`h-6 w-6 rounded-full bg-white transition ${pressed ? "translate-x-6" : "translate-x-0"}`}
-      />
-    </button>
-  );
-}
-

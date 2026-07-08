@@ -1,4 +1,4 @@
-﻿import {
+import {
   BrainCircuit,
   DatabaseZap,
   GitBranch,
@@ -10,16 +10,20 @@
   Workflow,
 } from "lucide-react";
 
+const DEFAULT_SITE_URL = "https://hiresense-ai.vercel.app";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, "") || DEFAULT_SITE_URL;
+
 export const siteConfig = {
   name: "HireSense AI",
   subtitle: "Conversational Assessment Intelligence",
   description:
     "A production-quality AI recruiting product for grounded SHL assessment recommendations.",
-  url: "https://hiresense-ai.vercel.app",
+  url: siteUrl,
   links: {
-    github: "https://github.com/your-username/hiresense-ai",
-    demo: "https://hiresense-ai.vercel.app",
-    linkedin: "https://www.linkedin.com/in/your-profile",
+    github: "https://github.com/kanhaiyas103/hiresense-ai",
+    demo: siteUrl,
+    linkedin: "https://www.linkedin.com/in/TODO-add-profile",
   },
   nav: [
     { label: "Product", href: "/" },
