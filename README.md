@@ -1,10 +1,22 @@
-# HireSense AI
+﻿# HireSense AI
+
+![Next.js](https://img.shields.io/badge/Next.js-15-000000?style=flat&logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat&logo=react&logoColor=111111)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?style=flat&logo=typescript&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-Backend-009688?style=flat&logo=fastapi&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat&logo=python&logoColor=white)
+![FAISS](https://img.shields.io/badge/FAISS-Vector%20Search-4B5563?style=flat)
+![Vercel](https://img.shields.io/badge/Vercel-Deploy-000000?style=flat&logo=vercel&logoColor=white)
+![Hugging Face Spaces](https://img.shields.io/badge/Hugging%20Face-Spaces-FFD21E?style=flat&logo=huggingface&logoColor=111111)
+![License](https://img.shields.io/badge/License-MIT-10B981?style=flat)
 
 AI Recruiter Copilot for SHL Assessment Recommendations
 
 HireSense AI is a production-style recruiter copilot that helps hiring teams discover relevant SHL assessment recommendations through a polished conversational interface. The product combines a modern Next.js frontend with a grounded FastAPI retrieval backend so recruiters can move from plain-language hiring needs to structured assessment shortlists.
 
-[🌐 Live Demo](#) · [⚙ Backend Repository](#) · [🎥 Demo Video](#) · [📄 License](#license)
+## Quick Links
+
+[🌐 Live Demo](https://hiresense-ai-roan.vercel.app/about) · [⚙ Backend Repository](https://github.com/kanhaiyas103/shl-assessment-recommender) · 🎥 Demo Video: Coming Soon · [📄 License](#license)
 
 ---
 
@@ -17,6 +29,37 @@ HireSense AI solves this with a conversational interface backed by hybrid retrie
 Recommendations are grounded in an indexed catalog of SHL Individual Test Solutions. This project originated from an SHL AI engineering take-home challenge and later evolved into a production-style recruiter copilot experience.
 
 This is an independent implementation and is not affiliated with or endorsed by SHL.
+
+---
+
+## Table of Contents
+
+- [Overview](#overview)
+- [Why HireSense AI?](#why-hiresense-ai)
+- [Features](#features)
+- [Screenshots](#-screenshots)
+- [Architecture](#architecture)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [How It Works](#how-it-works)
+- [Local Development](#local-development)
+- [Deployment](#deployment)
+- [Future Roadmap](#future-roadmap)
+- [Acknowledgements](#acknowledgements)
+- [License](#license)
+
+---
+
+## Why HireSense AI?
+
+HireSense AI reduces the friction of browsing assessment catalogs manually by turning recruiter intent into a structured, grounded shortlist.
+
+| Traditional Workflow | HireSense AI |
+|----------------------|--------------|
+| Browse hundreds of assessments manually | Describe the role in natural language |
+| Compare catalog pages individually | Receive grounded recommendations instantly |
+| Build shortlists manually | AI prepares recruiter-ready assessment shortlists |
+| Limited reasoning | Transparent recommendation explanations |
 
 ---
 
@@ -69,7 +112,7 @@ This is an independent implementation and is not affiliated with or endorsed by 
 
 ---
 
-## ?? Screenshots
+## 📸 Screenshots
 
 ### Landing Page
 
@@ -138,6 +181,18 @@ flowchart TD
 ```
 
 The frontend is responsible for product experience, conversation management, visual polish, API calls, and recommendation presentation. The backend owns requirement extraction, retrieval, ranking, validation, and grounded recommendation generation.
+
+---
+
+## Repository Ecosystem
+
+HireSense AI is organized as a small product ecosystem: a polished frontend experience backed by a separate retrieval API and live deployment.
+
+- **Frontend Repository:** This repository contains the Next.js product interface.
+  - ↓
+- **Backend Repository:** [SHL Assessment Recommender](https://github.com/kanhaiyas103/shl-assessment-recommender) contains the FastAPI retrieval and recommendation service.
+  - ↓
+- **Live Deployment:** [HireSense AI on Vercel](https://hiresense-ai-roan.vercel.app/about) connects the frontend experience to the deployed backend API.
 
 ---
 
