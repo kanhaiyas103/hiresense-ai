@@ -91,7 +91,7 @@ Recruiters can describe hiring requirements in natural language and receive grou
 
 The AI explains why specific SHL assessments were selected before presenting the final shortlist.
 
-![Recommendation Summary](docs/images/recommendations-summary.png)
+![Recommendation Summary](docs/images/recommendations%20%20summary.png)
 
 ---
 
@@ -99,7 +99,7 @@ The AI explains why specific SHL assessments were selected before presenting the
 
 Rich recommendation cards display assessment metadata, rationale, confidence indicators, and direct links to the official SHL catalog.
 
-![Recommendation Cards](docs/images/recommendation-cards.png)
+![Recommendation Cards](docs/images/recommendations%20cards.png)
 
 ---
 
