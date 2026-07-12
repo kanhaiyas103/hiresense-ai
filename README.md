@@ -415,4 +415,4 @@ This project is an independent implementation and is not affiliated with or endo
 
 ## License
 
-MIT License placeholder. Add the final license file before public release.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
